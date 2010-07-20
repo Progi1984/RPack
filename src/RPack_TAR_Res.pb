@@ -1,0 +1,21 @@
+Structure S_RPack_TAR
+  lFileID.l
+  sFilePath.s
+  sFileName.s
+  sFileMode.s
+  sOUId.s
+  sGUId.s
+  lFileSize.l
+  sLastModifTime.s
+  sChecksum.s
+  lLinkIndicator.l
+  sNameLinkedFile.s
+  lMemory.l
+  sMagic.s
+  sVersion.s
+  sUName.s
+  sGName.s
+  sDevMajor.s
+  sDevMinor.s
+  sPrefix.s
+EndStructure

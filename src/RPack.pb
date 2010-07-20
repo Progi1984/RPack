@@ -1,57 +1,53 @@
-﻿;- Import
-CompilerSelect #PB_Compiler_OS
-  CompilerCase #PB_OS_Windows ;{
-    Import "C:\Program Files\PureBasic\Compilers\ObjectManager.lib"
-      Object_GetOrAllocateID  (Objects, Object.l) As "_PB_Object_GetOrAllocateID@8"
-      Object_GetObject        (Objects, Object.l) As "_PB_Object_GetObject@8"
-      Object_IsObject         (Objects, Object.l) As "_PB_Object_IsObject@8"
-      Object_EnumerateAll     (Objects, ObjectEnumerateAllCallback, *VoidData) As "_PB_Object_EnumerateAll@12"
-      Object_EnumerateStart   (Objects) As "_PB_Object_EnumerateStart@4"
-      Object_EnumerateNext    (Objects, *object.Long) As "_PB_Object_EnumerateNext@8"
-      Object_EnumerateAbort   (Objects) As "_PB_Object_EnumerateAbort@4"
-      Object_FreeID           (Objects, Object.l) As "_PB_Object_FreeID@8"
-      Object_Init             (StructureSize.l, IncrementStep.l, ObjectFreeFunction) As "_PB_Object_Init@12"
-      Object_GetThreadMemory  (MemoryID.l) As "_PB_Object_GetThreadMemory@4"
-      Object_InitThreadMemory (Size.l, InitFunction, EndFunction) As "_PB_Object_InitThreadMemory@12"
-    EndImport
+﻿; Macros for double quotes
+Macro DQuote
+  "
+EndMacro
+; Define the ImportLib
+CompilerSelect #PB_Compiler_Thread
+  CompilerCase #False ;{ THREADSAFE : OFF
+    CompilerSelect #PB_Compiler_OS
+      CompilerCase #PB_OS_Linux         : #Power_ObjectManagerLib = #PB_Compiler_Home + "compilers/objectmanager.a"
+      CompilerCase #PB_OS_Windows   : #Power_ObjectManagerLib = #PB_Compiler_Home + "compilers\ObjectManager.lib"
+    CompilerEndSelect
   ;}
-  CompilerCase #PB_OS_Linux ;{
-    ImportC "/media/DISK/Programs/purebasic/compilers/objectmanager.a"
-      Object_GetOrAllocateID  (Objects, Object.l) As "PB_Object_GetOrAllocateID"
-      Object_GetObject        (Objects, Object.l) As "PB_Object_GetObject"
-      Object_IsObject         (Objects, Object.l) As "PB_Object_IsObject"
-      Object_EnumerateAll     (Objects, ObjectEnumerateAllCallback, *VoidData) As "PB_Object_EnumerateAll"
-      Object_EnumerateStart   (Objects) As "PB_Object_EnumerateStart"
-      Object_EnumerateNext    (Objects, *object.Long) As "PB_Object_EnumerateNext"
-      Object_EnumerateAbort   (Objects) As "PB_Object_EnumerateAbort"
-      Object_FreeID           (Objects, Object.l) As "PB_Object_FreeID"
-      Object_Init             (StructureSize.l, IncrementStep.l, ObjectFreeFunction) As "PB_Object_Init"
-      Object_GetThreadMemory  (MemoryID.l) As "PB_Object_GetThreadMemory"
-      Object_InitThreadMemory (Size.l, InitFunction, EndFunction) As "PB_Object_InitThreadMemory"
-    EndImport
+  CompilerCase #True ;{ THREADSAFE : ON
+    CompilerSelect #PB_Compiler_OS
+      CompilerCase #PB_OS_Linux         : #Power_ObjectManagerLib = #PB_Compiler_Home + "compilers/objectmanagerthread.a"
+      CompilerCase #PB_OS_Windows   : #Power_ObjectManagerLib = #PB_Compiler_Home + "compilers\ObjectManagerThread.lib"
+    CompilerEndSelect
   ;}
 CompilerEndSelect
-
+; Macro ImportFunction
 CompilerSelect #PB_Compiler_OS
   CompilerCase #PB_OS_Linux ;{
-    Global System_Separator.s = "/"
+    Macro ImportFunction(Name, Param)
+      DQuote#Name#DQuote
+    EndMacro
   ;}
   CompilerCase #PB_OS_Windows ;{
-    Global System_Separator.s = "\"
+    Macro ImportFunction(Name, Param)
+      DQuote _#Name@Param#DQuote
+    EndMacro
   ;}
 CompilerEndSelect
+; Import the ObjectManager library
+CompilerSelect #PB_Compiler_OS
+  CompilerCase #PB_OS_Linux : ImportC #Power_ObjectManagerLib
+  CompilerCase #PB_OS_Windows : Import #Power_ObjectManagerLib
+CompilerEndSelect
+  Object_GetOrAllocateID(Objects, Object.l) As ImportFunction(PB_Object_GetOrAllocateID, 8)
+  Object_GetObject(Objects, Object.l) As ImportFunction(PB_Object_GetObject,8)
+  Object_IsObject(Objects, Object.l) As ImportFunction(PB_Object_IsObject,8)
+  Object_EnumerateAll(Objects, ObjectEnumerateAllCallback, *VoidData) As ImportFunction(PB_Object_EnumerateAll,12)
+  Object_EnumerateStart(Objects) As ImportFunction(PB_Object_EnumerateStart,4)
+  Object_EnumerateNext(Objects, *object.Long) As ImportFunction(PB_Object_EnumerateNext,8)
+  Object_EnumerateAbort(Objects) As ImportFunction(PB_Object_EnumerateAbort,4)
+  Object_FreeID(Objects, Object.l) As ImportFunction(PB_Object_FreeID,8)
+  Object_Init(StructureSize.l, IncrementStep.l, ObjectFreeFunction) As ImportFunction(PB_Object_Init,12)
+  Object_GetThreadMemory(MemoryID.l) As ImportFunction(PB_Object_GetThreadMemory,4)
+  Object_InitThreadMemory(Size.l, InitFunction, EndFunction) As ImportFunction(PB_Object_InitThreadMemory,12)
+EndImport
 
-; Declarations
-Declare RPack_Tar_Read(ID.l)
-Declare RPack_Tar_FileInfo(ID.l)
-Declare RPack_Tar_Compress(ID.l, FileName.s, AppendMethod.l)
-Declare RPack_Tar_ExtractOne(ID, OutputPath.s, FileID.l)
-Declare RPack_Tar_ExtractAll(ID, OutputPath.s)
-Declare RPack_Tar_AddFile(ID.l, FileName.s, Path.s)
-Declare RPack_Tar_AddMemory(ID.l, FileName.s, *MemoryBank, MemoryBankSize.l)
-Declare RPack_Tar_FindFile(ID.l, FileName.s)
-
-;- Functions RMisc
 Procedure.s RMisc_ReadAscii(FileID.l, NumByte.l)
   Protected Ascii.s, Inc_a.l
   Ascii = ""
@@ -102,12 +98,12 @@ EndProcedure
 Procedure.l RMisc_CreateDirectoryEx(FolderPath.s)
  Protected Folder.s, Txt.s, Cpt.l
  If FileSize(Folder) = -1
-  Folder = StringField(FolderPath, 1, System_Separator) + System_Separator
+  Folder = StringField(FolderPath, 1, #System_Separator) + #System_Separator
   Cpt     = 1
   Repeat
    Cpt + 1
-   Txt      = StringField(FolderPath, Cpt, System_Separator)
-   Folder = Folder + Txt + System_Separator
+   Txt      = StringField(FolderPath, Cpt, #System_Separator)
+   Folder = Folder + Txt + #System_Separator
    CreateDirectory(Folder)
   Until Txt = ""
  EndIf
@@ -173,34 +169,41 @@ ProcedureDLL RPack_Init()
   
   Global NewList S_RPack_TAR_File.S_RPack_TAR()
 EndProcedure
-ProcedureDLL.l RPack_(ID.l)
-  Protected *RObject.S_RPack = RPACK_ID(ID)
 
-EndProcedure
+;XIncludeFile "RPack_RPM_Inc.pb"
+XIncludeFile "RPack_TAR_Inc.pb"
 
-ProcedureDLL.l RPack_Create(ID.l, FileName.s, Type.l)
+ProcedureDLL.l RPack_Create(ID.l, sFileName.s, lType.l)
   Protected *RObject.S_RPack = RPACK_NEW(ID)
-	With *RObject
-		\FileName =	FileName
-		\Type =	Type
-	EndWith
-  ProcedureReturn *RObject
+  If *RObject
+  	With *RObject
+  		\sFileName  =	sFileName
+  		\lType      =	lType
+  	EndWith
+    ProcedureReturn *RObject
+  Else
+    ProcedureReturn #False
+  EndIf
 EndProcedure
 ProcedureDLL.l RPack_Read(ID.l)
   Protected *RObject.S_RPack = RPACK_ID(ID)
-	Select *RObject\Type 
-		Case #RPack_Type_Tar
-			ProcedureReturn RPack_Tar_Read(ID)
-		Default
-			ProcedureReturn #RPack_Error_Format_Unknown		
-	EndSelect
+  If *RObject
+  	Select *RObject\lType 
+  		Case #RPack_Type_Tar
+  			ProcedureReturn RPack_Tar_Read(ID)
+  		Default
+  			ProcedureReturn #RPack_Error_Format_Unknown		
+  	EndSelect
+  Else
+    ProcedureReturn #False
+  EndIf
 EndProcedure
 ProcedureDLL.l RPack_Free(ID.l)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   If *RObject
     ; Format : Tar
   	ForEach S_RPack_TAR_File()
-  		If S_RPack_TAR_File()\FileID = ID
+  		If S_RPack_TAR_File()\lFileID = ID
   			DeleteElement(S_RPack_TAR_File())
   		EndIf
   	Next
@@ -213,559 +216,175 @@ EndProcedure
 ProcedureDLL.l RPack_GetType(ID.l)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   If *RObject
-	  ProcedureReturn *RObject\Type
+	  ProcedureReturn *RObject\lType
+	Else
+	  ProcedureReturn #False
 	EndIf
 EndProcedure
 ProcedureDLL.l RPack_GetFileCount(ID.l)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   Protected lNum.l
   If *RObject
-  	Select *RObject\Type 
+  	Select *RObject\lType 
   		Case #RPack_Type_Tar ;{
       	ForEach S_RPack_TAR_File()
       		With S_RPack_TAR_File()
-      			If \FileID	=	Id
+      			If \lFileID	=	ID
       				lNum	+1
       			EndIf
       		EndWith
       	Next
+      	ProcedureReturn lNum
   		;}
   		Default
   			ProcedureReturn #RPack_Error_Format_Unknown		
   	EndSelect
+  Else
+    ProcedureReturn #False
   EndIf
-  ProcedureReturn lNum
 EndProcedure
-ProcedureDLL.l RPack_FileInfo(ID.l)
+ProcedureDLL.l RPack_GetFileInfo(ID.l)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   If *RObject
-  	Select *RObject\Type 
+  	Select *RObject\lType 
   		Case #RPack_Type_Tar
   			ProcedureReturn RPack_Tar_FileInfo(ID)
   		Default
   			ProcedureReturn #RPack_Error_Format_Unknown
   	EndSelect
+  Else
+    ProcedureReturn #False  
   EndIf
 EndProcedure
 
 ProcedureDLL.l RPack_FindFirst(ID.l)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   If *RObject
-  	*RObject\Location	=	0
+  	*RObject\lLocation	=	0
   	ProcedureReturn #RPack_Error_Success
   EndIf
 EndProcedure
 ProcedureDLL.l RPack_FindNext(ID.l)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   If *RObject
-  	If *RObject\Location < RPack_GetFileCount(ID) - 1
-  		*RObject\Location	+ 1
+  	If *RObject\lLocation < RPack_GetFileCount(ID) - 1
+  		*RObject\lLocation	+ 1
   	EndIf
   	ProcedureReturn #RPack_Error_Success
   EndIf
 EndProcedure
-ProcedureDLL.l RPack_FindFile(ID.l, FileName.s)
+ProcedureDLL.l RPack_FindFile(ID.l, sFileName.s)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   If *RObject
-  	Select *RObject\Type 
+  	Select *RObject\lType 
   		Case #RPack_Type_Tar
-  			ProcedureReturn RPack_Tar_FindFile(ID.l, FileName.s)
+  			ProcedureReturn RPack_Tar_FindFile(ID.l, sFileName.s)
   		Default
   			ProcedureReturn #RPack_Error_Format_Unknown		
   	EndSelect
+  Else
+    ProcedureReturn #False
   EndIf
 EndProcedure
-ProcedureDLL.l RPack_Extract(ID.l, Path.s, ExtractPath.l)
+;@todo : Moebius 1.5 : Default bExtractPath à #True
+ProcedureDLL.l RPack_Extract(ID.l, sPath.s, bExtractPath.b)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   If *RObject
-		If ExtractPath = #True ; on extrait tout
-			Select *RObject\Type 
+		If bExtractPath = #True ; on extrait tout
+			Select *RObject\lType 
 				Case #RPack_Type_Tar
-					ProcedureReturn RPack_Tar_ExtractAll(ID, Path)
+					ProcedureReturn RPack_Tar_ExtractAll(ID, sPath)
 				Default
 					ProcedureReturn #RPack_Error_Format_Unknown
 			EndSelect
 		Else
-			Select *RObject\Type 
+			Select *RObject\lType 
 				Case #RPack_Type_Tar
-					ProcedureReturn RPack_Tar_ExtractOne(ID, Path, *RObject\Location)
+					ProcedureReturn RPack_Tar_ExtractOne(ID, sPath, *RObject\lLocation)
 				Default
 					ProcedureReturn #RPack_Error_Format_Unknown
 			EndSelect
 		EndIf
+  Else
+    ProcedureReturn #False
   EndIf
 EndProcedure
-ProcedureDLL.l RPack_ExtractFile(ID.l, FileNumberInArchive.l, OutputPath.s) 
+ProcedureDLL.l RPack_ExtractFile(ID.l, lFileNumberInArchive.l, sOutputPath.s) 
   Protected *RObject.S_RPack = RPACK_ID(ID)
   If *RObject
-  	Select *RObject\Type 
+  	Select *RObject\lType 
   		Case #RPack_Type_Tar
-  			ProcedureReturn RPack_Tar_ExtractOne(ID, OutputPath, FileNumberInArchive)
+  			ProcedureReturn RPack_Tar_ExtractOne(ID, sOutputPath, lFileNumberInArchive)
   		Default
   			ProcedureReturn #RPack_Error_Format_Unknown
   	EndSelect
+  Else
+    ProcedureReturn #False
   EndIf
 EndProcedure
-ProcedureDLL.l RPack_Compress(ID.l, FileName.s, AppendMethod.l)
+ProcedureDLL.l RPack_Compress(ID.l, sFileName.s, bAppendMethod.b)
   Protected *RObject.S_RPack 	= RPACK_ID(ID)
   If *RObject
-  	Select *RObject\Type 
+  	Select *RObject\lType 
   		Case #RPack_Type_Tar
-  			ProcedureReturn RPack_Tar_Compress(ID, FileName, AppendMethod)
+  			ProcedureReturn RPack_Tar_Compress(ID, sFileName, bAppendMethod)
   		Default
   			ProcedureReturn #RPack_Error_Format_Unknown
   	EndSelect
+  Else
+    ProcedureReturn #False
   EndIf
 EndProcedure
-ProcedureDLL.l RPack_AddFile(ID.l, FileName.s, Path.s)
+ProcedureDLL.l RPack_AddFile(ID.l, sFileName.s, sPath.s)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   If *RObject
-  	Select *RObject\Type 
+  	Select *RObject\lType 
   		Case #RPack_Type_Tar
-  			ProcedureReturn RPack_Tar_AddFile(ID, FileName, Path)
+  			ProcedureReturn RPack_Tar_AddFile(ID, sFileName, sPath)
   		Default
   			ProcedureReturn #RPack_Error_Format_Unknown
   	EndSelect
+  Else
+    ProcedureReturn #False
   EndIf
 EndProcedure
-ProcedureDLL.l RPack_AddFiles(ID.l, Directory.s, Filter.s)
+;@todo : Moebius 1.5 : Default sFilter à "*.*"
+ProcedureDLL.l RPack_AddFiles(ID.l, sDirectory.s, sFilter.s)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   Protected lDirExam.l
   Protected sEntryName.s
   If *RObject
-    If Right(Directory, 1) <> System_Separator
-      Directory + System_Separator
+    If Right(sDirectory, 1) <> #System_Separator
+      sDirectory + #System_Separator
     EndIf
-  	lDirExam = ExamineDirectory(#PB_Any, Directory, Filter)  
+  	lDirExam = ExamineDirectory(#PB_Any, sDirectory, sFilter)  
   	If lDirExam
       While NextDirectoryEntry(lDirExam)
       	sEntryName = DirectoryEntryName(lDirExam)
         If DirectoryEntryType(lDirExam) = #PB_DirectoryEntry_File
-  				Select *RObject\Type 
+  				Select *RObject\lType 
   					Case #RPack_Type_Tar
-  						RPack_Tar_AddFile(ID, Directory + sEntryName, Directory)
-  						ProcedureReturn #RPack_Error_Success
+  						RPack_Tar_AddFile(ID, sDirectory + sEntryName, sDirectory)
   				EndSelect
         EndIf
       Wend
       FinishDirectory(lDirExam)
     EndIf
   	ProcedureReturn #RPack_Error_Success
+  Else
+    ProcedureReturn #False
   EndIf
 EndProcedure
-ProcedureDLL.l RPack_AddMemory(ID.l, FileName.s, *MemoryBank, MemoryBankSize.l)
+ProcedureDLL.l RPack_AddMemory(ID.l, sFileName.s, *MemBank, lMemBankSize.l)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   If *RObject
-  	Select *RObject\Type 
+  	Select *RObject\lType 
   		Case #RPack_Type_Tar
-  			ProcedureReturn RPack_Tar_AddMemory(ID, FileName, *MemoryBank, MemoryBankSize)
+  			ProcedureReturn RPack_Tar_AddMemory(ID, sFileName, *MemBank, lMemBankSize)
   		Default
   			ProcedureReturn #RPack_Error_Format_Unknown
   	EndSelect
+  Else
+    ProcedureReturn #False
   EndIf
 EndProcedure
-
-;- TAR
-;{
-	Procedure RPack_Tar_Read(ID.l)
-		Protected *RObject.S_RPack = RPACK_ID(ID)
-		Protected FileTAR.l
-		Protected Ascii.s
-		If *RObject
-      If FileSize(*RObject\FileName) = -1
-        ProcedureReturn #RPack_Error_FileNotFound
-      Else
-        FileTAR = ReadFile(#PB_Any, *RObject\FileName)
-        FileSeek(FileTAR,0)
-        If FileTAR
-          With S_RPack_TAR_File()
-          	Repeat
-            	Repeat
-                Ascii.s = RMisc_ReadAscii(FileTAR, 100)
-                If Len(Ascii) = 0
-                  FileSeek(FileTAR, Loc(FileTAR) + (512 - Loc(FileTAR) % 512))
-                Else
-                  LastElement(S_RPack_TAR_File())
-                  AddElement(S_RPack_TAR_File())
-                    \FileID = ID
-                    \FileName = Ascii
-                    \FileMode = RMisc_ReadAscii(FileTAR, 8)
-                    \OUID = RMisc_ReadAscii(FileTAR, 8)
-                    \GUID = RMisc_ReadAscii(FileTAR, 8)
-                    \FileSize = RMisc_OctToDec(Trim(RMisc_ReadAscii(FileTAR, 12)))
-                    \LastModifTime = RMisc_ReadAscii(FileTAR, 12)
-                    \Checksum = RMisc_ReadAscii(FileTAR, 8)
-                    \LinkIndicator  = Val(Trim(RMisc_ReadAscii(FileTAR, 1)))
-                    \NameLinkedFile = RMisc_ReadAscii(FileTAR, 100)
-                    \Magic = RMisc_ReadAscii(FileTAR,6)
-                    If Trim(\Magic) ="ustar"
-                      \Version = RMisc_ReadAscii(FileTAR, 2)
-                      \Uname = RMisc_ReadAscii(FileTAR, 32)
-                      \GName = RMisc_ReadAscii(FileTAR, 32)
-                      \DevMajor = RMisc_ReadAscii(FileTAR, 8)
-                      \DevMinor = RMisc_ReadAscii(FileTAR, 8)
-                      \Prefix = RMisc_ReadAscii(FileTAR, 155)
-                    Else
-                      FileSeek(FileTAR, Loc(FileTAR) - 6)
-                    EndIf
-                    If \FileSize > 0
-                      FileSeek(FileTAR, Loc(FileTAR) + (512 - Loc(FileTAR) % 512))
-                      \Memory = AllocateMemory(\FileSize)
-                      ReadData(FileTAR, \Memory, \FileSize)
-                    EndIf
-                    If Loc(FileTAR) % 512 <> 0
-                      FileSeek(FileTAR, Loc(FileTAR) + (512 - Loc(FileTAR) % 512))
-                    EndIf
-                  Break
-                EndIf 
-              Until Len(Ascii) > 0 Or Eof(FileTAR) > 0
-            Until Eof(FileTAR) > 0
-            CloseFile(FileTAR)
-          EndWith
-          ProcedureReturn #RPack_Error_Success
-        Else
-          ProcedureReturn #RPack_Error_FileNotOpened
-        EndIf
-      EndIf
-    EndIf
-	EndProcedure
-	Procedure RPack_Tar_FileInfo(ID.l)
-		Protected *RObject.S_RPack 	= RPACK_ID(ID)
-		Protected Count.l =	0
-		If *RObject
-			ForEach S_RPack_TAR_File()
-				If S_RPack_TAR_File()\FileID	=	ID 
-					If Count = *RObject\Location
-						Break
-					Else
-						Count + 1
-					EndIf
-				EndIf
-			Next
-  		ProcedureReturn @S_RPack_TAR_File()
-  	EndIf
-	EndProcedure
-	Procedure RPack_Tar_Compress(ID.l, FileName.s, AppendMethod.l)
-	 	Protected TarSize.l = 0
-	 	Protected TarMemoryLoc.l = 0
-	 	Protected FileOpen.l, FileMemory.l, TarCreate.l, TarMemory.l
-  	; Taille du Tar
-  	ForEach S_RPack_TAR_File()
-  		If S_RPack_TAR_File()\FileID = ID
-  			TarSize + 512 + S_RPack_TAR_File()\FileSize + (512 - (S_RPack_TAR_File()\FileSize % 512))
-  		EndIf
-  	Next
-  	TarSize + 512
-  	; Allocation de Mémoire
-  	TarMemory = AllocateMemory(TarSize)
-		With S_RPack_TAR_File()
-	  	ForEach S_RPack_TAR_File()
-	  		If \FileID = ID
-		      For Inc_a = 1 To Len(\FileName)
-		      	PokeB(TarMemory + TarMemoryLoc,Asc(Mid(\FileName,Inc_a,1)))
-		      	TarMemoryLoc + 1
-		      Next
-		      TarMemoryLoc + (100- Len(\FileName))
-		      For Inc_a = 1 To Len(\FileMode)
-		      	PokeB(TarMemory + TarMemoryLoc,Asc(Mid(\FileMode,Inc_a,1)))
-		      	TarMemoryLoc + 1
-		      Next
-		      For Inc_a = 1 To Len(\OUID)
-		      	PokeB(TarMemory + TarMemoryLoc,Asc(Mid(\OUID,Inc_a,1)))
-		      	TarMemoryLoc + 1
-		      Next
-		      For Inc_a = 1 To Len(\GUID)
-		      	PokeB(TarMemory + TarMemoryLoc,Asc(Mid(\GUID,Inc_a,1)))
-		      	TarMemoryLoc + 1
-		      Next
-		      For Inc_a = 1 To Len(RSet(RMisc_DecToOct(\FileSize),12," "))
-		      	PokeB(TarMemory + TarMemoryLoc,Asc(Mid(RSet(RMisc_DecToOct(\FileSize),12," "), Inc_a,1)))
-		      	TarMemoryLoc + 1
-		      Next
-		      For Inc_a = 1 To Len(\LastModifTime)
-		      	PokeB(TarMemory + TarMemoryLoc,Asc(Mid(\LastModifTime, Inc_a,1)))
-		      	TarMemoryLoc + 1
-		      Next
-		      For Inc_a = 1 To Len(\Checksum)
-		      	PokeB(TarMemory + TarMemoryLoc,Asc(Mid(\Checksum, Inc_a,1)))
-		      	TarMemoryLoc + 1
-		      Next
-		      PokeB(TarMemory + TarMemoryLoc,Asc(Str(\LinkIndicator)))
-		      TarMemoryLoc + 1
-		      For Inc_a = 1 To Len(\NameLinkedFile)
-		      	PokeB(TarMemory + TarMemoryLoc,Asc(Mid(\NameLinkedFile, Inc_a,1)))
-		      	TarMemoryLoc + 1
-		      Next
-		  		TarMemoryLoc + (512 - (TarMemoryLoc % 512))
-		  		If FileSize(\FilePath) > 0
-		  			CopyMemory(\Memory, TarMemory + TarMemoryLoc, MemorySize(\Memory))
-		  			TarMemoryLoc + (MemorySize(\Memory) + 512 - MemorySize(\Memory)%512)
-		  		EndIf
-	  		EndIf
-	  	Next
-  	EndWith
-  	; Append
-		If AppendMethod = #RPack_Method_Create
-			If FileSize(FileName) > -1
-				DeleteFile(FileName)
-			EndIf
-		ElseIf AppendMethod = #RPack_Method_Append
-			; Ouvre le fichier
-			FileOpen 	= OpenFile(#PB_Any, FileName)
-			; Envoie le contenu du fichier dans *FileMemory 
-			ReadData	(FileOpen, FileMemory, FileSize(FileName))
-			CloseFile	(FileOpen)
-			
-			; Mets *TarMemory dans une mem temporaire
-			TmpMemory = AllocateMemory(MemorySize(TarMemory))
-			CopyMemory(TarMemory, TmpMemory, MemorySize(TarMemory))
-			; Agrandit TarMemory de la taille de *FileMemory
-			TarMemory = ReAllocateMemory(TarMemory, MemorySize(TarMemory) + MemorySize(FileMemory))
-			; Copie *FileMemory au début de TarMemory
-			CopyMemory(FileMemory, TarMemory, MemorySize(FileMemory))
-			; Copie *TarMemory à la fin
-			CopyMemory(TmpMemory, TarMemory + MemorySize(FileMemory), MemorySize(TmpMemory))
-			; Libère Mem inutiles
-			FreeMemory(TmpMemory)
-			FreeMemory(FileMemory)
-			If FileSize(FileName) > -1
-				DeleteFile(FileName)
-			EndIf
-		EndIf
-  	; Ecriture du Tar
-  	TarCreate = CreateFile(#PB_Any, FileName)
-  	If TarCreate
-	  	WriteData(TarCreate, TarMemory, MemorySize(TarMemory))
-	  	CloseFile(TarCreate)
-	  	FreeMemory(TarMemory)
-	  	ProcedureReturn #RPack_Error_Success
-  	Else
-  		ProcedureReturn #RPack_Error_FileNotCreated
-  	EndIf
-	EndProcedure
-	Procedure RPack_Tar_ExtractOne(ID, OutputPath.s, FileID.l)
-    Protected FileNum.l = 0, FileCreateID.l
-    Protected FileCreateName.s
-    If Right(OutputPath,1) <> System_Separator
-      OutputPath + System_Separator
-    EndIf
-    With S_RPack_TAR_File()
-	    ForEach S_RPack_TAR_File()
-	      If \FileID = ID
-	        If FileNum = FileID
-	          If \LinkIndicator = 0
-	            FileCreateName = OutputPath + ReplaceString(\FileName,"/","\")
-	            FileCreateID = RMisc_OpenFileEx(#PB_Any, FileCreateName)
-	            WriteData(FileCreateID, \Memory, \FileSize)
-	            CloseFile(FileCreateID)
-	          Else
-	            FileCreateName = OutputPath + ReplaceString(\FileName,"/","\")
-	            RMisc_CreateDirectoryEx(FileCreateName)
-	          EndIf
-	          ProcedureReturn #RPack_Error_Success
-	        Else
-	          FileNum + 1
-	        EndIf
-	      EndIf
-	    Next
-    EndWith
-    ProcedureReturn #RPack_Error_FileNotFound
-	EndProcedure
-	Procedure RPack_Tar_ExtractAll(ID, OutputPath.s)
-    Protected FileNum.l = 0
-    With S_RPack_TAR_File()
-	    ForEach S_RPack_TAR_File()
-	      If \FileID = ID
-	        RPack_Tar_ExtractOne(ID, OutputPath, FileNum)
-	        FileNum + 1
-	      EndIf
-	    Next
-    EndWith
-    ProcedureReturn #RPack_Error_Success
-	EndProcedure
-	Procedure RPack_Tar_AddFile(ID.l, FileName.s, Path.s)
-    Protected Sum_Header.l	= 0
-    Protected FileRead.l, Inc_a.l
-    With S_RPack_TAR_File()
-	    ForEach S_RPack_TAR_File()
-	      If \FileID = ID And \FileName = Path + GetFilePart(FileName)
-	        ProcedureReturn #RPack_Error_FileEverListed
-	      EndIf
-	    Next
-	    If FileSize(FileName) >= 0
-	    	Sum_Header			=	0
-	      LastElement(S_RPack_TAR_File())
-	      AddElement(S_RPack_TAR_File())
-	      \FileID = ID
-	      \FilePath =	FileName
-	      \FileName = GetFilePart(FileName)
-	      \FileMode = RSet("777",8, " ")
-	      \OUID = RSet("0"  ,8, " ")
-	      \GUID = RSet("0"  ,8, " ")
-	      \FileSize = FileSize(FileName)
-	      \LastModifTime = RSet(RMisc_DecToOct(RMisc_GetModifTime(FileName)),12, " ")
-	      \Checksum = RSet(""		, 8, " ")
-	      \LinkIndicator = 0
-	      \NameLinkedFile = RSet(""  	,100, " ")
-	      ; Checksum
-	      For Inc_a = 1 To Len(\FileName)
-	      	Sum_Header + Asc(Mid(\FileName,Inc_a,1))
-	      Next
-	      For Inc_a = 1 To Len(\FileMode)
-	      	Sum_Header + Asc(Mid(\FileMode,Inc_a,1))
-	      Next
-	      For Inc_a = 1 To Len(\OUID)
-	      	Sum_Header + Asc(Mid(\OUID,Inc_a,1))
-	      Next
-	      For Inc_a = 1 To Len(\GUID)
-	      	Sum_Header + Asc(Mid(\GUID,Inc_a,1))
-	      Next
-	      For Inc_a = 1 To Len(RSet(RMisc_DecToOct(\FileSize),12," "))
-	      	Sum_Header + Asc(Mid(RSet(RMisc_DecToOct(\FileSize),12," "),Inc_a,1))
-	      Next
-	      For Inc_a = 1 To Len(\LastModifTime)
-	      	Sum_Header + Asc(Mid(\LastModifTime,Inc_a,1))
-	      Next
-	      For Inc_a = 1 To Len(\Checksum)
-	      	Sum_Header + Asc(Mid(\Checksum,Inc_a,1))
-	      Next
-	     	Sum_Header + Asc(Str(\LinkIndicator))
-	      For Inc_a = 1 To Len(\NameLinkedFile)
-	      	Sum_Header + Asc(Mid(\NameLinkedFile,Inc_a,1))
-	      Next
-	    	\CheckSum = RSet(RMisc_DecToOct(Sum_Header), 8, " ")
-	    	
-	    	\Memory =	AllocateMemory(\FileSize)
-	    	FileRead = ReadFile(#PB_Any, \FilePath)
-	    	  ReadData(FileRead, \Memory, \FileSize)
-	    	CloseFile(FileRead)
-	    	ProcedureReturn #RPack_Error_Success
-	    Else
-	      ProcedureReturn #RPack_Error_FileNotFound
-	    EndIf
-    EndWith
-	EndProcedure
-	Procedure RPack_Tar_AddMemory(ID.l, FileName.s, *MemoryBank, MemoryBankSize.l)
-		With S_RPack_TAR_File()
-	    ForEach S_RPack_TAR_File()
-	      If \FileID = ID And \FileName = FileName
-	        ProcedureReturn #RPack_Error_FileEverListed
-	      EndIf
-	      If FileSize(FileName) >= 0
-		    	Sum_Header			=	0
-		      LastElement(S_RPack_TAR_File())
-		      AddElement(S_RPack_TAR_File())
-		      \FileID = ID
-		      \FilePath =	GetPathPart(FileName)
-		      \FileName = FileName
-		      \FileMode = RSet("777",8, " ")
-		      \OUID = RSet("0"  ,8, " ")
-		      \GUID = RSet("0"  ,8, " ")
-		      \FileSize = MemoryBankSize
-		      \LastModifTime = RSet(RMisc_DecToOct(Date()),12, " ")
-		      \Checksum = RSet(""		, 8, " ")
-		      \LinkIndicator = 0
-		      \NameLinkedFile = RSet("",100, " ")
-		      ; Checksum
-		      For Inc_a = 1 To Len(\FileName)
-		      	Sum_Header + Asc(Mid(\FileName,Inc_a,1))
-		      Next
-		      For Inc_a = 1 To Len(\FileMode)
-		      	Sum_Header + Asc(Mid(\FileMode,Inc_a,1))
-		      Next
-		      For Inc_a = 1 To Len(\OUID)
-		      	Sum_Header + Asc(Mid(\OUID,Inc_a,1))
-		      Next
-		      For Inc_a = 1 To Len(\GUID)
-		      	Sum_Header + Asc(Mid(\GUID,Inc_a,1))
-		      Next
-		      For Inc_a = 1 To Len(RSet(RMisc_DecToOct(\FileSize),12," "))
-		      	Sum_Header + Asc(Mid(RSet(RMisc_DecToOct(\FileSize),12," "),Inc_a,1))
-		      Next
-		      For Inc_a = 1 To Len(\LastModifTime)
-		      	Sum_Header + Asc(Mid(\LastModifTime,Inc_a,1))
-		      Next
-		      For Inc_a = 1 To Len(\Checksum)
-		      	Sum_Header + Asc(Mid(\Checksum,Inc_a,1))
-		      Next
-		     	Sum_Header + Asc(Str(\LinkIndicator))
-		      For Inc_a = 1 To Len(\NameLinkedFile)
-		      	Sum_Header + Asc(Mid(\NameLinkedFile,Inc_a,1))
-		      Next
-		    	
-		    	\CheckSum = RSet(RMisc_DecToOct(Sum_Header), 8, " ")
-		    	
-		    	\Memory =	AllocateMemory(\FileSize)
-		    	CopyMemory(*MemoryBank, \Memory, \FileSize)
-		    	ProcedureReturn #RPack_Error_Success
-		    Else
-		      ProcedureReturn #RPack_Error_FileNotFound
-		    EndIf
-	    Next
-		EndWith
-	EndProcedure
-	Procedure RPack_Tar_FindFile(ID.l, FileName.s)
-    Protected FileNum.l = 0
-    With S_RPack_TAR_File()
-	    ForEach S_RPack_TAR_File()
-	      If \FileID = ID
-	        If \FileName = FileName
-	        	ProcedureReturn FileNum
-	        Else
-	        	FileNum + 1
-	        EndIf
-	      EndIf
-	    Next
-    EndWith
-    ProcedureReturn #RPack_Error_FileNotFound
-	EndProcedure
-;}
-;{ RPM
-	Procedure RPack_RPM_GetHeader(ID.l)
-    If OpenFile(0, "amule-2.1.3-3.fc7.i386.rpm")
-      Debug "Header"
-      Debug ReadCharacter(0)
-      Debug $ED
-      Debug ReadCharacter(0)
-      Debug $AB
-      Debug ReadCharacter(0)
-      Debug $EE
-      Debug ReadCharacter(0)
-      Debug $DB
-      
-      Debug "MAJ"
-      Debug ReadCharacter(0)
-      Debug "MIN"
-      Debug ReadCharacter(0)
-      
-      Debug "TYPE"
-      Debug ReadCharacter(0)
-
-      Debug "ARCH"
-      Debug ReadCharacter(0)
-
-      Debug "NAME"
-      Debug RMisc_ReadAscii(0, 66) 
-;       sString.s = ""
-;       For Inc = 0 To 65
-;         sString + Chr(ReadCharacter(0))
-;       Next 
-;       Debug sString
-      
-      Debug "OS"
-      Debug ReadCharacter(0)
-      
-      Debug "Signature"
-      Debug ReadCharacter(0)
-      
-      Debug "Reserved"
-      Debug RMisc_ReadAscii(0, 16) 
-      
-      CloseFile(0)
-    EndIf
-	EndProcedure
-;}
-;{ CPIO
-;}
-;{ XTM
-;}
