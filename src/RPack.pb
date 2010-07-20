@@ -74,40 +74,46 @@ Procedure.s RMisc_DecToOct(Dec.l)
   Octal = Str(Dec) + Octal
   ProcedureReturn Octal
 EndProcedure
-Procedure.l RMisc_OpenFileEx(File.l, FileName.s)
-  Protected PathPart.s = ""
-  Protected FilePart.s = GetFilePart(FileName)
-  Protected Inc_a.l
-  If GetPathPart(FileName) <> ""
-      Inc_a = 1
-      Repeat
-        Node.s = StringField(FileName, Inc_a, "\")
-        If Node = FilePart
+Procedure.l RMisc_OpenFileEx(File.l, sFileName.s)
+  Protected sPathPart.s
+  Protected sFilePart.s = GetFilePart(sFileName)
+  Protected lInc.l
+  If GetPathPart(sFileName) <> ""
+    CompilerSelect #PB_Compiler_OS
+      CompilerCase #PB_OS_Linux : lInc = 2 : sPathPart = "/"
+      CompilerCase #PB_OS_Windows : lInc = 1 : sPathPart = ""
+    CompilerEndSelect
+    Repeat
+      sNode.s = StringField(GetPathPart(sFileName), lInc, #System_Separator)
+      If sNode > ""
+        If sNode = sFilePart
             Break
         EndIf
-        PathPart + Node + "\"
-        If FileSize(PathPart) = -2
-          Else
-            CreateDirectory(PathPart)
+        sPathPart + sNode + #System_Separator
+        If FileSize(sPathPart) = -2
+        Else
+            CreateDirectory(sPathPart)
         EndIf
-        Inc_a + 1
-      Until Node = ""
+        lInc + 1
+      EndIf
+    Until sNode = ""
   EndIf
-  ProcedureReturn OpenFile(File, FileName)
+  ProcedureReturn OpenFile(File, sFileName)
 EndProcedure 
-Procedure.l RMisc_CreateDirectoryEx(FolderPath.s)
- Protected Folder.s, Txt.s, Cpt.l
- If FileSize(Folder) = -1
-  Folder = StringField(FolderPath, 1, #System_Separator) + #System_Separator
-  Cpt     = 1
+Procedure.l RMisc_CreateDirectoryEx(sFolderPath.s)
+  Protected sFolder.s, sTxt.s
+  Protected lCpt.l
+ If FileSize(sFolder) = -1
+  sFolder = StringField(sFolderPath, 1, #System_Separator) + #System_Separator
+  lCpt     = 1
   Repeat
-   Cpt + 1
-   Txt      = StringField(FolderPath, Cpt, #System_Separator)
-   Folder = Folder + Txt + #System_Separator
-   CreateDirectory(Folder)
-  Until Txt = ""
+   lCpt + 1
+   sTxt      = StringField(sFolderPath, sCpt, #System_Separator)
+   sFolder = sFolder + sTxt + #System_Separator
+   CreateDirectory(sFolder)
+  Until sTxt = ""
  EndIf
- If FileSize(FolderPath) = -2
+ If FileSize(sFolderPath) = -2
   ProcedureReturn #True
  Else
   ProcedureReturn #False
@@ -170,6 +176,7 @@ ProcedureDLL RPack_Init()
   Global NewList S_RPack_TAR_File.S_RPack_TAR()
 EndProcedure
 
+IncludePath #PB_Compiler_FilePath
 ;XIncludeFile "RPack_RPM_Inc.pb"
 XIncludeFile "RPack_TAR_Inc.pb"
 

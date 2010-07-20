@@ -1,10 +1,11 @@
-﻿
+﻿; XIncludeFile "../src/RPack.pb"
+; RPack_Init()
+
 	sPath.s 		= GetCurrentDirectory()
 	sPath_All.s	= sPath+"TAR_Extract_All"
 	sPath_One.s	= sPath+"TAR_Extract_OneByOne"
 	#EOL				=	Chr(13) + Chr(10)
 	sText.s     = "" 
-	
 	;- RPACK > READ
 	RPack_Create(0, "SampleTAR_Read.tar", #RPack_Type_Tar)
 		RPack_Read(0)
@@ -35,7 +36,10 @@
 					  sText + "Prefix : " + \sPrefix + #EOL
 					EndWith
 					MessageRequester("RPack", sText)
-					RPack_Extract(0, sPath_One+"\", #False)
+					CompilerSelect #PB_Compiler_OS
+					  CompilerCase #PB_OS_Linux : RPack_Extract(0, sPath_One+"/", #False)
+					  CompilerCase #PB_OS_Windows : RPack_Extract(0, sPath_One+"\", #False)
+					CompilerEndSelect
 				Default
 			EndSelect
 			RPack_FindNext(0)
@@ -77,5 +81,8 @@
 			EndSelect
 			RPack_FindNext(1)
 		Next
-		RPack_Compress(1, sPath +"\SampleTAR_Write.tar", #RPack_Method_Create)
+		CompilerSelect #PB_Compiler_OS
+		  CompilerCase #PB_OS_Linux : RPack_Compress(1, sPath +"/SampleTAR_Write.tar", #RPack_Method_Create)
+		  CompilerCase #PB_OS_Windows : RPack_Compress(1, sPath +"\SampleTAR_Write.tar", #RPack_Method_Create)
+		CompilerEndSelect
 	RPack_Free(1)

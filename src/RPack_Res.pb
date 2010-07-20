@@ -1,21 +1,21 @@
 ﻿;- Macros
-  Macro RPACK_ID(object)
-    Object_GetObject(RPackObjects, object)
-  EndMacro
-  Macro RPACK_IS(object)
-    Object_IsObject(RPackObjects, object) 
-  EndMacro
-  Macro RPACK_NEW(object)
-    Object_GetOrAllocateID(RPackObjects, object)
-  EndMacro
-  Macro RPACK_FREEID(object)
-    If object <> #PB_Any And RPACK_IS(object) = #True
-      Object_FreeID(RPackObjects, object)
-    EndIf
-  EndMacro
-  Macro RPACK_INITIALIZE(hCloseFunction)
-    Object_Init(SizeOf(S_RPack), 1, hCloseFunction)
-  EndMacro
+Macro RPACK_ID(object)
+  Object_GetObject(RPackObjects, object)
+EndMacro
+Macro RPACK_IS(object)
+  Object_IsObject(RPackObjects, object) 
+EndMacro
+Macro RPACK_NEW(object)
+  Object_GetOrAllocateID(RPackObjects, object)
+EndMacro
+Macro RPACK_FREEID(object)
+  If object <> #PB_Any And RPACK_IS(object) = #True
+    Object_FreeID(RPackObjects, object)
+  EndIf
+EndMacro
+Macro RPACK_INITIALIZE(hCloseFunction)
+  Object_Init(SizeOf(S_RPack), 1, hCloseFunction)
+EndMacro
 
 ;- Structures
 Structure S_RPack
@@ -77,4 +77,5 @@ CompilerIf #PB_Compiler_OS = #PB_OS_Linux
   EndStructure
 CompilerEndIf
 
+IncludePath #PB_Compiler_FilePath
 XIncludeFile "RPack_TAR_Res.pb"
