@@ -196,7 +196,7 @@ ProcedureDLL.l RPack_Read(ID.l)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   If *RObject
   	Select *RObject\lType 
-  		Case #RPack_Type_Tar
+  		Case #RPack_Type_TAR
   			ProcedureReturn RPack_Tar_Read(ID)
   		Default
   			ProcedureReturn #RPack_Error_Format_Unknown		
@@ -216,7 +216,7 @@ ProcedureDLL.l RPack_Free(ID.l)
   	Next
   	
   	; Free the pack
-  	RPackFree(Id)
+  	RPackFree(ID)
   	ProcedureReturn #RPack_Error_Success
   EndIf
 EndProcedure
@@ -233,7 +233,7 @@ ProcedureDLL.l RPack_GetFileCount(ID.l)
   Protected lNum.l
   If *RObject
   	Select *RObject\lType 
-  		Case #RPack_Type_Tar ;{
+  		Case #RPack_Type_TAR ;{
       	ForEach S_RPack_TAR_File()
       		With S_RPack_TAR_File()
       			If \lFileID	=	ID
@@ -254,7 +254,7 @@ ProcedureDLL.l RPack_GetFileInfo(ID.l)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   If *RObject
   	Select *RObject\lType 
-  		Case #RPack_Type_Tar
+  		Case #RPack_Type_TAR
   			ProcedureReturn RPack_Tar_FileInfo(ID)
   		Default
   			ProcedureReturn #RPack_Error_Format_Unknown
@@ -284,7 +284,7 @@ ProcedureDLL.l RPack_FindFile(ID.l, sFileName.s)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   If *RObject
   	Select *RObject\lType 
-  		Case #RPack_Type_Tar
+  		Case #RPack_Type_TAR
   			ProcedureReturn RPack_Tar_FindFile(ID.l, sFileName.s)
   		Default
   			ProcedureReturn #RPack_Error_Format_Unknown		
@@ -299,14 +299,14 @@ ProcedureDLL.l RPack_Extract(ID.l, sPath.s, bExtractPath.b)
   If *RObject
 		If bExtractPath = #True ; on extrait tout
 			Select *RObject\lType 
-				Case #RPack_Type_Tar
+				Case #RPack_Type_TAR
 					ProcedureReturn RPack_Tar_ExtractAll(ID, sPath)
 				Default
 					ProcedureReturn #RPack_Error_Format_Unknown
 			EndSelect
 		Else
 			Select *RObject\lType 
-				Case #RPack_Type_Tar
+				Case #RPack_Type_TAR
 					ProcedureReturn RPack_Tar_ExtractOne(ID, sPath, *RObject\lLocation)
 				Default
 					ProcedureReturn #RPack_Error_Format_Unknown
@@ -320,7 +320,7 @@ ProcedureDLL.l RPack_ExtractFile(ID.l, lFileNumberInArchive.l, sOutputPath.s)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   If *RObject
   	Select *RObject\lType 
-  		Case #RPack_Type_Tar
+  		Case #RPack_Type_TAR
   			ProcedureReturn RPack_Tar_ExtractOne(ID, sOutputPath, lFileNumberInArchive)
   		Default
   			ProcedureReturn #RPack_Error_Format_Unknown
@@ -333,7 +333,7 @@ ProcedureDLL.l RPack_Compress(ID.l, sFileName.s, bAppendMethod.b)
   Protected *RObject.S_RPack 	= RPACK_ID(ID)
   If *RObject
   	Select *RObject\lType 
-  		Case #RPack_Type_Tar
+  		Case #RPack_Type_TAR
   			ProcedureReturn RPack_Tar_Compress(ID, sFileName, bAppendMethod)
   		Default
   			ProcedureReturn #RPack_Error_Format_Unknown
@@ -346,7 +346,7 @@ ProcedureDLL.l RPack_AddFile(ID.l, sFileName.s, sPath.s)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   If *RObject
   	Select *RObject\lType 
-  		Case #RPack_Type_Tar
+  		Case #RPack_Type_TAR
   			ProcedureReturn RPack_Tar_AddFile(ID, sFileName, sPath)
   		Default
   			ProcedureReturn #RPack_Error_Format_Unknown
@@ -370,7 +370,7 @@ ProcedureDLL.l RPack_AddFiles(ID.l, sDirectory.s, sFilter.s)
       	sEntryName = DirectoryEntryName(lDirExam)
         If DirectoryEntryType(lDirExam) = #PB_DirectoryEntry_File
   				Select *RObject\lType 
-  					Case #RPack_Type_Tar
+  					Case #RPack_Type_TAR
   						RPack_Tar_AddFile(ID, sDirectory + sEntryName, sDirectory)
   				EndSelect
         EndIf
@@ -386,7 +386,7 @@ ProcedureDLL.l RPack_AddMemory(ID.l, sFileName.s, *MemBank, lMemBankSize.l)
   Protected *RObject.S_RPack = RPACK_ID(ID)
   If *RObject
   	Select *RObject\lType 
-  		Case #RPack_Type_Tar
+  		Case #RPack_Type_TAR
   			ProcedureReturn RPack_Tar_AddMemory(ID, sFileName, *MemBank, lMemBankSize)
   		Default
   			ProcedureReturn #RPack_Error_Format_Unknown
